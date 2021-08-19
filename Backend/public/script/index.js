@@ -4,7 +4,7 @@ const username = document.querySelector(".username")
 const passwodr = document.querySelector(".password")
 
 signUpbtn.onclick = (e) =>{
-    e.preventDefault();
+    e.preventDefault()
    axios.post("http://localhost:5000/signup",{
     username:username.value,
     password:passwodr.value,
@@ -22,7 +22,7 @@ signUpbtn.onclick = (e) =>{
 }
 
 loginBtn.onclick = (e) =>{
-    e.preventDefault();
+   
     axios.post("http://localhost:5000/login",{
         username:username.value,
         password:passwodr.value
@@ -34,4 +34,5 @@ loginBtn.onclick = (e) =>{
     .catch((err)=>{
         if(err) console.log(err)
     })
+    e.preventDefault()
 }

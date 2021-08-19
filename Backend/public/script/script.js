@@ -4,7 +4,12 @@ var messegeInput = document.querySelector(".messege-input")
 
 socket = io('http://localhost:5000/')
 
-socket.emit("username","mahendra")
+axios.get('/username')
+.then(async (res)=>{
+    res = await json(res)
+    console.log(res)
+    socket.emit('username',res.data.username)
+})
 
 
 socket.on('send',(messege)=>{
