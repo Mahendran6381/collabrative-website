@@ -1,20 +1,34 @@
 const bcrypt = require("bcryptjs");
+const fs = require('fs')
+const path = require('path')
+const {
+  GridFsStorage
+} = require('multer-gridfs-storage')
+const Grid = require('gridfs-stream')
+const methodoverride = require('method-override')
 const mongoose = require("mongoose");
 const express = require("express");
-const dotenv = require("dotenv");
+const dotenv = require("dotenv").config();
+const multer = require('multer');
 const bodyParser = require("body-parser");
+const storeFileSchema = require('./models/fileSchema')
 const UserSchema = require("./models/mongoose");
 const TodoSchema = require("./models/todoSchema");
-const { json } = require("body-parser");
+const {
+  json
+} = require("body-parser");
 const cors = require("cors");
+const crypto = require('crypto')
 const ejs = require("ejs");
 const app = express();
 const ChatSchema = require("./models/messegeSchema");
 //server connection
+app.use(methodoverride('__method'))
 var http = require("http").Server(app);
-var { https } = require("follow-redirects");
+var {
+  https
+} = require("follow-redirects");
 const io = require("socket.io")(http);
-dotenv.config();
 const URI = process.env.URI;
 app.use(cors());
 app.use(
@@ -25,9 +39,9 @@ app.use(
 app.use(express.static(__dirname + "/public"));
 app.use(bodyParser.json());
 //connecting to the database
+const conn = mongoose.createConnection(URI)
 mongoose.connect(
-  URI,
-  {
+  URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
     useFindAndModify: false,
@@ -42,7 +56,9 @@ mongoose.connect(
   }
 );
 //save the user info in the mongodb database
-const UserDetails = { username: "" };
+const UserDetails = {
+  username: ""
+};
 const SaveInDatabase = (username, name, password) => {
   const NewUser = new UserSchema({
     username: username,
@@ -69,8 +85,7 @@ app.post("/login", (req, res) => {
   console.log("Login");
   username = req.body.username;
   password = req.body.password;
-  UserSchema.findOne(
-    {
+  UserSchema.findOne({
       username: username,
     },
     (err, Users) => {
@@ -175,19 +190,127 @@ app.post("/addtask", (req, res) => {
       }
     });
 });
-app.get('/todos',(req,res)=>{
-  TodoSchema.find({},(err,docs)=>{
-    if(!err){
-      console.log(docs)
-      console.log("Success")
-      res.json([docs])
+app.get("/todos", (req, res) => {
+  TodoSchema.find({}, (err, docs) => {
+    if (!err) {
+      console.log(docs);
+      console.log("Success");
+      res.json([docs]);
+    } else {
+      throw err;
     }
-    else{
-      throw err
+  });
+});
+app.post("/removetask", (req, res) => {
+  let taskDate = req.body.date;
+  console.log(taskDate)
+  TodoSchema.findOne({
+    date: taskDate
+  }, (err, Task) => {
+    if (!err) {
+      console.log(Task);
+      Task.remove();
+      res.json({
+        condition: true
+      })
+    } else {
+      res.json({
+        condition: false,
+        error: err
+      })
+    }
+  });
+});
+const storefile = (originalname, filename) => {
+  console.log("Storeing")
+  const StoreFile = new storeFileSchema({
+    originalname: originalname,
+    filename: filename
+  })
+  StoreFile.save()
+    .then((res) => {
+      console.log(res)
+    })
+    .catch((err) => {
+      if (err) {
+        console.log(err)
+      }
+    })
+
+}
+
+
+let gfs;
+conn.once('open', () => {
+  gfs = Grid(conn.db, mongoose.mongo);
+  gfs.collection('uploads')
+})
+var storage = new GridFsStorage({
+  url: URI,
+  file: (req, file) => {
+    return new Promise((resolve, reject) => {
+      crypto.randomBytes(16, (err, buf) => {
+        if (err) {
+          return reject(err);
+        }
+        const filename = buf.toString('hex') + path.extname(file.originalname);
+        storefile(file.originalname, filename)
+        const fileInfo = {
+          filename: filename,
+          bucketName: 'uploads'
+        };
+        resolve(fileInfo);
+      });
+    });
+  }
+});
+
+app.get("/files", (req, res) => {
+  let files = []
+  storeFileSchema.find({}, (err, docs) => {
+    if (!err) {
+      console.log("Retrived Data")
+      docs.forEach((item) => {
+        let doc = {
+          originalname: item.originalname,
+          filename: item.filename
+        }
+        console.log(doc)
+        files.push(doc)
+        console.log(files)
+      })
+      console.log(files, "files")
+      res.json(files)
+    } else {
+      console.log(err)
+      res.status(400).send("File Nt found")
     }
   })
 
 
+})
+
+
+
+const upload = multer({
+  storage
+});
+app.post('/upload', upload.single('file'), (req, res) => {
+  res.json({
+    file: req.file
+  })
+})
+app.post('/getfiles', (req, res) => {
+  console.log(req.body)
+  gfs.files.findOne({
+    filename: req.body.id
+  }, (err, file) => {
+    if (err) {
+      res.status(400).send("Proplem in retriveing in data")
+    }
+    const readStream = gfs.createReadStream(file.filename);
+    readStream.pipe(res);
+  })
 })
 app.get("/", (req, res) => {
   res.render("index.html");
