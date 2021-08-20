@@ -4,14 +4,15 @@ const express = require("express");
 const dotenv = require("dotenv");
 const bodyParser = require("body-parser");
 const UserSchema = require("./models/mongoose");
+const TodoSchema = require("./models/todoSchema");
 const { json } = require("body-parser");
 const cors = require("cors");
 const ejs = require("ejs");
 const app = express();
-const ChatSchema = require('./models/messegeSchema')
+const ChatSchema = require("./models/messegeSchema");
 //server connection
 var http = require("http").Server(app);
-var http = require('follow-redirects').http;
+var { https } = require("follow-redirects");
 const io = require("socket.io")(http);
 dotenv.config();
 const URI = process.env.URI;
@@ -25,7 +26,8 @@ app.use(express.static(__dirname + "/public"));
 app.use(bodyParser.json());
 //connecting to the database
 mongoose.connect(
-  URI, {
+  URI,
+  {
     useNewUrlParser: true,
     useUnifiedTopology: true,
     useFindAndModify: false,
@@ -40,7 +42,7 @@ mongoose.connect(
   }
 );
 //save the user info in the mongodb database
-const UserDetails = { username: ""}
+const UserDetails = { username: "" };
 const SaveInDatabase = (username, name, password) => {
   const NewUser = new UserSchema({
     username: username,
@@ -57,11 +59,11 @@ const SaveInDatabase = (username, name, password) => {
       console.log(err);
     });
 };
-app.get('/main',(req,res)=>{
-  console.log('trying to redirect')
-  res.setHeader("Content-Type", "text/html")
-     res.render('index.ejs')
-})
+app.post("/main", (req, res) => {
+  console.log(req.body);
+  UserDetails.username = req.body.username;
+  res.render("index.ejs");
+});
 //get  for /login
 app.post("/login", (req, res) => {
   console.log("Login");
@@ -77,16 +79,18 @@ app.post("/login", (req, res) => {
         //if username is not null we have to compare the hashed password and the user password
         bcrypt.compare(password, Users.password, (err, result) => {
           console.log(result);
-          console.log(password)
+          console.log(password);
           console.log(Users.password);
           console.log(Users);
           if (err) console.log(err);
           else {
             if (result == true) {
-              UserDetails.username = username
+              UserDetails.username = username;
               console.log("User Authenticated");
-              res.redirect('/main')
-              
+              res.json({
+                auth: true,
+                details: Users,
+              });
             } else {
               console.log("Authetication Fail");
               res.send("user Not found");
@@ -97,12 +101,10 @@ app.post("/login", (req, res) => {
     }
   );
 });
-app.get('/username', (req, res) => {
-        res.sendStatus(200).json(UserDetails)
-        cosole.log("UserDetails Sended")
-})
-
-
+app.get("/username", (req, res) => {
+  res.json(UserDetails);
+  console.log("UserDetails Sended");
+});
 
 //post for /signup
 app.post("/signup", (req, res) => {
@@ -133,12 +135,62 @@ io.on("connection", (socket) => {
     socket.username = user;
   });
   socket.on("send", (messege) => {
+    let userChat = new ChatSchema({
+      username: socket.username,
+      messege: messege,
+    });
+    userChat
+      .save()
+      .then((doc) => {
+        if (doc) {
+          console.log(doc);
+        }
+      })
+      .catch((err) => {
+        if (err) {
+          console.log(err);
+        }
+      });
     io.emit("send", socket.username + " : " + messege);
   });
 });
+app.post("/addtask", (req, res) => {
+  task = req.body.task;
+  date = req.body.date;
+  const newTask = new TodoSchema({
+    task: task,
+    date: date,
+  });
+  newTask
+    .save()
+    .then((doc) => {
+      if (doc) {
+        console.log(doc);
+        res.send(doc);
+      }
+    })
+    .catch((err) => {
+      if (err) {
+        console.log(err);
+      }
+    });
+});
+app.get('/todos',(req,res)=>{
+  TodoSchema.find({},(err,docs)=>{
+    if(!err){
+      console.log(docs)
+      console.log("Success")
+      res.json([docs])
+    }
+    else{
+      throw err
+    }
+  })
 
-app.get('/',(req,res)=>{
-  res.render('index.html')
+
 })
+app.get("/", (req, res) => {
+  res.render("index.html");
+});
 
-http.listen(5000)
+http.listen(5000);
