@@ -17,7 +17,6 @@ const TodoSchema = require("./models/todoSchema");
 const {
   json
 } = require("body-parser");
-const cors = require("cors");
 const crypto = require('crypto')
 const ejs = require("ejs");
 const app = express();
@@ -28,6 +27,7 @@ var http = require("http").Server(app);
 var {
   https
 } = require("follow-redirects");
+const cors = require('cors')
 const io = require("socket.io")(http);
 const URI = process.env.URI;
 app.use(cors());
@@ -144,6 +144,28 @@ app.post("/signup", (req, res) => {
     res.send("Proplem With User Input");
   }
 });
+app.get("/getMessege",(req,res)=>{
+  console.log("Hi")
+  let messeges = []
+  ChatSchema.find({},(err,docs)=>{
+    if(!err){
+      docs.forEach((item)=>{
+        let messege = {
+          username:item.username,
+          messege:item.messege
+        }
+        messeges.push(messege)
+      })
+      res.send(messeges)
+    }else{
+      console.log(err)
+      res.status(400).json({
+        error:err
+      })
+    }
+  })
+})
+
 
 io.on("connection", (socket) => {
   socket.on("username", (user) => {

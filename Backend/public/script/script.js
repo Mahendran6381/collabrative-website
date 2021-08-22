@@ -6,7 +6,7 @@ var task = document.querySelector(".task");
 var todoList = document.querySelector('.todo-list')
 const files = document.querySelector('.files')
 
-socket = io("http://localhost:5000/");
+
 let tasklist = null
 
 axios.get("/username").then(async (res) => {
@@ -28,7 +28,7 @@ const addTodo = (todos) => {
     todos = todos[0]
     tasklist = todos
     todoList.innerHTML = ''
-  todos.forEach((item) => {
+    todos.forEach((item) => {
     let li = document.createElement("li");
     li.textContent = item.task + "  " + String(item.date);
     li.innerHTML = `${item.task + "  " + String(item.date)} <button class = "delete"><i class="fas fa-trash"></i></button>`

@@ -7,7 +7,7 @@ const userName = document.querySelector('#var2')
 const form = document.querySelector('#form')
 
 signUpbtn.onclick = (e) =>{
-    e.preventDefault()
+   e.preventDefault()
    axios.post("http://localhost:5000/signup",{
     username:username.value,
     password:passwodr.value,
