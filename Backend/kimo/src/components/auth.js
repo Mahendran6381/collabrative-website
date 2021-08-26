@@ -1,6 +1,8 @@
 import React from "react"
 import axios from "axios";
 import { useState } from "react";
+import loginImage from "../image/3545760.jpg" 
+import "../styles/style-main.css";
 const Auth = (props) =>{
     const {setAuthStatus,authStatus,username,setUsername} = props;
     const [password, setPassword] = useState("");
@@ -47,7 +49,7 @@ const Auth = (props) =>{
       <div>
         <div className="container">
           <div className="image">
-            <img src="" alt="man.jpg" />
+            <img src={loginImage}  alt="man.jpg" />
           </div>
           <div className="login">
             <div className="panel">

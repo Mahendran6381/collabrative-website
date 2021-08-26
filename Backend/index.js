@@ -226,22 +226,18 @@ app.get("/todos", (req, res) => {
 app.post("/removetask", (req, res) => {
   let taskDate = req.body.date;
   console.log(taskDate)
-  TodoSchema.findOne({
-    date: taskDate
-  }, (err, Task) => {
-    if (!err) {
-      console.log(Task);
-      Task.remove();
+  TodoSchema.deleteOne({date:taskDate},(err)=>{
+    if(err){
+      console.log(err)
       res.json({
-        condition: true
+        condition:false
       })
-    } else {
-      res.json({
-        condition: false,
-        error: err
-      })
-    }
-  });
+    }else{
+    res.json({ 
+        condition:true
+    })
+  }
+})
 });
 const storefile = (originalname, filename) => {
   console.log("Storeing")

@@ -3,6 +3,7 @@ import axios from "axios";
 import { useState, useRef } from "react";
 import { saveAs } from "file-saver";
 import io from "socket.io-client";
+import "../styles/style.css";
 
 const Main = (props) => {
   var connectionOptions = {
@@ -66,7 +67,7 @@ const Main = (props) => {
     e.preventDefault();
     axios
       .post("/addtask", {
-        task: task.value,
+        task: task,
         date: Date.now(),
       })
       .then((res) => {
@@ -89,8 +90,8 @@ const Main = (props) => {
         console.log(res);
         let messege = res.data.map((item) => {
           return (
-            <li>
-              {item.username} : {item.messege}{" "}
+            <li className ="messege received">
+              <p>{item.username} : {item.messege}{" "}</p>
             </li>
           );
         });
@@ -107,13 +108,14 @@ const Main = (props) => {
         let taskJsx = res.map((item) => {
           return (
             <>
+              <div className="Task">
               <li>
-                {item.task} {item.date}
+                {item.task}
               </li>
               <button className="delete" onClick={(e) => deleteTask(item.date)}>
-                del
                 <i className="fas fa-trash"></i>
               </button>
+              </div>
             </>
           );
         });
@@ -166,7 +168,11 @@ const Main = (props) => {
         <div className="files">{files}</div>
       </div>
       <div className="messege-pannel">
-        {messeges}
+          <h2>Messeges</h2>
+        <ul className ="main">
+          {messeges}
+           
+        </ul>
         <div className="send-messege">
           <input
             type="text"
@@ -190,10 +196,9 @@ const Main = (props) => {
             className="task"
             type="text"
             value={task}
-            onClick={(e) => setTask(e.target.value)}
+            onChange={(e) => setTask(e.target.value)}
           />
           <button className="add-task" onClick={(e) => addTask(e)}>
-            add
             <i className="fas fa-plus" />
           </button>
         </div>
@@ -203,6 +208,7 @@ const Main = (props) => {
         </ul>
       </div>
     </div>
+    
   );
 };
 
