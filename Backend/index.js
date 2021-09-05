@@ -91,7 +91,7 @@ app.post("/login", (req, res) => {
   UserSchema.findOne({
       username:{"$in":[`${username}`]},
       code:code
-    },P
+    },
     (err, Users) => {
       if (err) console.log(err);
       else {

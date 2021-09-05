@@ -6,8 +6,10 @@ import "../styles/style-main.css";
 const Auth = (props) =>{
     const {setAuthStatus,authStatus,username,setUsername} = props;
     const [password, setPassword] = useState("");
+    const [code,setCode] = useState("")
     const setPass = (event) => setPassword(event.target.value);
     const setUser = (event) => setUsername(event.target.value);
+    const setGRPCode = (event) => setCode(event.target.value);
     //functions
     const SignUp = (e) => {
       e.preventDefault();
@@ -16,6 +18,7 @@ const Auth = (props) =>{
           username: username,
           password: password,
           name: "Tummy",
+          code:code
         })
         .then((res) => {
           console.log(res);
@@ -31,7 +34,8 @@ const Auth = (props) =>{
       e.preventDefault()
       axios.post("http://localhost:5000/login",{
           username:username,
-          password:password
+          password:password,
+          code:code
       })
       .then(async (res)=>{
           console.log(res)
@@ -61,6 +65,14 @@ const Auth = (props) =>{
                   className="username"
                   value={username}
                   onChange={(e) => setUser(e)}
+                />
+                 <label htmlFor="username">Code</label>
+                <input
+                  type="text"
+                  name="grpcode"
+                  className="username"
+                  value={code}
+                  onChange={(e) => setGRPCode(e)}
                 />
                 <label htmlFor="password">Password</label>
                 <input
