@@ -39,7 +39,7 @@ app.use(
 app.use(express.static(__dirname + "/public"));
 app.use(bodyParser.json());
 //connecting to the database
-const conn = mongoose.createConnection(URI)
+
 mongoose.connect(
   URI, {
     useNewUrlParser: true,
@@ -55,16 +55,18 @@ mongoose.connect(
     }
   }
 );
+const conn = mongoose.connection;
 //save the user info in the mongodb database
 const UserDetails = {
   username: ""
 };
-const SaveInDatabase = (username, name, password) => {
-  const NewUser = new UserSchema({
-    username: username,
+const SaveInDatabase = async (username, name, password,code) => {
+  const NewUser = await new UserSchema({
     name: name,
     password: password,
+    code:code
   });
+  NewUser.username.push(username)
 
   NewUser.save()
     .then((doc) => {
@@ -85,9 +87,11 @@ app.post("/login", (req, res) => {
   console.log("Login");
   username = req.body.username;
   password = req.body.password;
+  code = req.body.code;
   UserSchema.findOne({
-      username: username,
-    },
+      username:{"$in":[`${username}`]},
+      code:code
+    },P
     (err, Users) => {
       if (err) console.log(err);
       else {
@@ -102,10 +106,27 @@ app.post("/login", (req, res) => {
             if (result == true) {
               UserDetails.username = username;
               console.log("User Authenticated");
-              res.json({
-                auth: true,
-                details: Users,
-              });
+              mongoose.connection.close();
+              console.log("hihihii")
+              mongoose.connect(
+                `mongodb+srv://mahi:mahihacker@sandboxx.6epsu.mongodb.net/${Users.code}?retryWrites=true&w=majority`, {
+                  useNewUrlParser: true,
+                  useUnifiedTopology: true,
+                  useFindAndModify: false,
+                  useCreateIndex: true,
+                },
+                (err) => {
+                  if (err) {
+                    console.log(err);
+                  } else {
+                    console.log("User Database Connected");
+                    res.json({
+                      auth: true,
+                      details: Users,
+                    });
+                  }
+                }
+              );
             } else {
               console.log("Authetication Fail");
               res.send("user Not found");
@@ -126,6 +147,7 @@ app.post("/signup", (req, res) => {
   const username = req.body.username;
   const name = req.body.name;
   const passwod = req.body.password;
+  const code = req.body.code;
   console.log(username, name, passwod);
   if (username != null && passwod != null) {
     bcrypt.genSalt(10, (salterr, salt) => {
@@ -134,7 +156,7 @@ app.post("/signup", (req, res) => {
         bcrypt.hash(passwod, salt, (err, hash) => {
           if (err) console.log(err);
           else {
-            SaveInDatabase(username, name, hash);
+            SaveInDatabase(username, name, hash,code);
             res.send("Done");
           }
         });
@@ -144,23 +166,23 @@ app.post("/signup", (req, res) => {
     res.send("Proplem With User Input");
   }
 });
-app.get("/getMessege",(req,res)=>{
+app.get("/getMessege", (req, res) => {
   console.log("Hi")
   let messeges = []
-  ChatSchema.find({},(err,docs)=>{
-    if(!err){
-      docs.forEach((item)=>{
+  ChatSchema.find({}, (err, docs) => {
+    if (!err) {
+      docs.forEach((item) => {
         let messege = {
-          username:item.username,
-          messege:item.messege
+          username: item.username,
+          messege: item.messege
         }
         messeges.push(messege)
       })
       res.send(messeges)
-    }else{
+    } else {
       console.log(err)
       res.status(400).json({
-        error:err
+        error: err
       })
     }
   })
@@ -226,18 +248,20 @@ app.get("/todos", (req, res) => {
 app.post("/removetask", (req, res) => {
   let taskDate = req.body.date;
   console.log(taskDate)
-  TodoSchema.deleteOne({date:taskDate},(err)=>{
-    if(err){
+  TodoSchema.deleteOne({
+    date: taskDate
+  }, (err) => {
+    if (err) {
       console.log(err)
       res.json({
-        condition:false
+        condition: false
       })
-    }else{
-    res.json({ 
-        condition:true
-    })
-  }
-})
+    } else {
+      res.json({
+        condition: true
+      })
+    }
+  })
 });
 const storefile = (originalname, filename) => {
   console.log("Storeing")
