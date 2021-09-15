@@ -24,9 +24,7 @@ const ChatSchema = require("./models/messegeSchema");
 //server connection
 app.use(methodoverride('__method'))
 var http = require("http").Server(app);
-var {
-  https
-} = require("follow-redirects");
+
 const cors = require('cors')
 const io = require("socket.io")(http);
 const URI = process.env.URI;
@@ -97,17 +95,13 @@ app.post("/login", (req, res) => {
       else {
         //if username is not null we have to compare the hashed password and the user password
         bcrypt.compare(password, Users.password, (err, result) => {
-          console.log(result);
-          console.log(password);
-          console.log(Users.password);
-          console.log(Users);
+
           if (err) console.log(err);
           else {
             if (result == true) {
               UserDetails.username = username;
               console.log("User Authenticated");
               mongoose.connection.close();
-              console.log("hihihii")
               mongoose.connect(
                 `mongodb+srv://mahi:mahihacker@sandboxx.6epsu.mongodb.net/${Users.code}?retryWrites=true&w=majority`, {
                   useNewUrlParser: true,
@@ -357,5 +351,8 @@ app.post('/getfiles', (req, res) => {
 app.get("/", (req, res) => {
   res.render("index.html");
 });
+if(process.env.NODE_ENV === "production"){
+  app.use(express.static('kimo/build'))
+}
 
 http.listen(5000);

@@ -4,7 +4,11 @@
   "description": "restapi for user authentication using mongoose, express, by bcryptjs",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build":"cd kimo && npm run build",
+    "install-kimo": "cd kimo && npm install",
+    "heroku-postbuild":"npm run install-kimo  &&  npm run build ",
+    "start": "npm install nodemon && nodemon index.js"
   },
   "author": "Mahendran",
   "license": "MIT",

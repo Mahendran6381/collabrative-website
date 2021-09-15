@@ -20,10 +20,6 @@ const Auth = (props) =>{
           name: "Tummy",
           code:code
         })
-        .then((res) => {
-          console.log(res);
-          console.log("SignUp successfull");
-        })
         .catch((err) => {
           if (err) {
             console.log(err);
@@ -40,7 +36,6 @@ const Auth = (props) =>{
       .then(async (res)=>{
           console.log(res)
           if(res.data.auth){
-            console.log("Authetication Success")
             setAuthStatus(!authStatus)
           }
       })
