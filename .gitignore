@@ -3,3 +3,4 @@ kimo\node_modules
 .env
 Backend\package-lock.json
 kimo\package-lock.json
+.env
